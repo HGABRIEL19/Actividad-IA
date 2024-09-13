@@ -1,0 +1,63 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# Título del dashboard
+st.title("Dashboard de Respuestas de Habilidades Blandas")
+
+# Cargar los datos generados
+@st.cache
+def load_data():
+    df = pd.read_csv("respuestas_habilidades_blandas_1000.csv")
+    return df
+
+# Cargar el dataset
+df = load_data()
+
+# Mostrar los primeros 5 registros
+st.subheader("Vista previa de las primeras 5 respuestas")
+st.dataframe(df.head())
+
+# Seleccionar una pregunta para visualizar las respuestas
+st.subheader("Distribución de Respuestas por Pregunta")
+pregunta_seleccionada = st.selectbox("Selecciona una pregunta para ver su distribución:", df.columns[:-1])  # Excluimos el correo electrónico
+
+# Contar la cantidad de respuestas para la pregunta seleccionada
+distribucion_respuestas = df[pregunta_seleccionada].value_counts()
+
+# Crear un gráfico de barras con Plotly para mostrar la distribución de respuestas
+fig = px.bar(distribucion_respuestas, 
+             x=distribucion_respuestas.index, 
+             y=distribucion_respuestas.values, 
+             labels={'x': 'Respuesta', 'y': 'Cantidad'},
+             title=f"Distribución de respuestas para: {pregunta_seleccionada}")
+
+st.plotly_chart(fig)
+
+# Mostrar estadísticas de respuesta
+st.subheader("Estadísticas Generales")
+total_usuarios = len(df)
+contacto_si = df['Correo Electrónico'].count()
+contacto_no = total_usuarios - contacto_si
+
+st.write(f"Total de usuarios: {total_usuarios}")
+st.write(f"Usuarios que desean ser contactados: {contacto_si}")
+st.write(f"Usuarios que no desean ser contactados: {contacto_no}")
+
+# Filtrar respuestas por categoría
+st.subheader("Filtrar Respuestas por Categoría de Habilidad")
+categoria_seleccionada = st.selectbox("Selecciona una categoría de habilidad:", ["Comunicación", "Trabajo en Equipo", "Resolución de Problemas", "Adaptabilidad", "Gestión del Tiempo", "Pensamiento Crítico"])
+
+# Mostrar preguntas de la categoría seleccionada
+preguntas_categoria = [q for q, _ in form_2_questions[categoria_seleccionada]]
+df_categoria = df[preguntas_categoria]
+
+st.write(f"Preguntas en la categoría de {categoria_seleccionada}:")
+st.dataframe(df_categoria.head())
+
+# Opcional: guardar el archivo actualizado
+st.subheader("Guardar archivo actualizado")
+if st.button("Guardar CSV actualizado"):
+    df.to_csv("respuestas_habilidades_blandas_actualizado.csv", index=False)
+    st.write("Archivo CSV actualizado guardado con éxito.")
+
